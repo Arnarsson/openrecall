@@ -104,24 +104,45 @@ def take_screenshots() -> List[np.ndarray]:
     return screenshots
 
 
-def record_screenshots_thread() -> None:
+def record_screenshots_thread(stop_event=None, pause_event=None) -> None:
     """
     Continuously records screenshots, processes them, and stores relevant data.
 
     Checks for user activity and image similarity before processing and saving
     screenshots, associated OCR text, embeddings, and active application info.
-    Runs in an infinite loop, intended to be executed in a separate thread.
+    Runs in a loop until stop_event is set, intended to be executed in a separate thread.
+
+    Args:
+        stop_event: threading.Event to signal the thread to stop. If None, runs indefinitely.
+        pause_event: threading.Event to pause recording. If set, recording is paused.
     """
-    # TODO: Move this environment variable setting to the application's entry point.
     # HACK: Prevents a warning/error from the huggingface/tokenizers library
     # when used in environments where multiprocessing fork safety is a concern.
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
     last_screenshots: List[np.ndarray] = take_screenshots()
 
-    while True:
+    def should_stop():
+        return stop_event is not None and stop_event.is_set()
+
+    def is_paused():
+        return pause_event is not None and pause_event.is_set()
+
+    def wait_or_sleep(seconds):
+        """Wait using stop_event for responsive shutdown, or sleep if no event."""
+        if stop_event is not None:
+            stop_event.wait(timeout=seconds)
+        else:
+            time.sleep(seconds)
+
+    while not should_stop():
+        # Check if paused
+        if is_paused():
+            wait_or_sleep(1)
+            continue
+
         if not is_user_active():
-            time.sleep(3)  # Wait longer if user is inactive
+            wait_or_sleep(3)  # Wait longer if user is inactive
             continue
 
         current_screenshots: List[np.ndarray] = take_screenshots()
@@ -129,20 +150,22 @@ def record_screenshots_thread() -> None:
         # Ensure we have a last_screenshot for each current_screenshot
         # This handles cases where monitor setup might change (though unlikely mid-run)
         if len(last_screenshots) != len(current_screenshots):
-             # If monitor count changes, reset last_screenshots and continue
-             last_screenshots = current_screenshots
-             time.sleep(3)
-             continue
-
+            # If monitor count changes, reset last_screenshots and continue
+            last_screenshots = current_screenshots
+            wait_or_sleep(3)
+            continue
 
         for i, current_screenshot in enumerate(current_screenshots):
+            if should_stop():
+                break
+
             last_screenshot = last_screenshots[i]
 
             if not is_similar(current_screenshot, last_screenshot):
                 last_screenshots[i] = current_screenshot  # Update the last screenshot for this monitor
                 image = Image.fromarray(current_screenshot)
                 timestamp = int(time.time())
-                filename = f"{timestamp}_{i}.webp" # Add monitor index to filename for uniqueness
+                filename = f"{timestamp}_{i}.webp"  # Add monitor index to filename for uniqueness
                 filepath = os.path.join(screenshots_path, filename)
                 image.save(
                     filepath,
@@ -156,50 +179,7 @@ def record_screenshots_thread() -> None:
                     active_app_name: str = get_active_app_name() or "Unknown App"
                     active_window_title: str = get_active_window_title() or "Unknown Title"
                     insert_entry(
-                        text, timestamp, embedding, active_app_name, active_window_title, filename # Pass filename
+                        text, timestamp, embedding, active_app_name, active_window_title, filename
                     )
 
-        time.sleep(3) # Wait before taking the next screenshot
-
-    return screenshots
-
-
-def record_screenshots_thread():
-    # TODO: fix the error from huggingface tokenizers
-    import os
-
-    os.environ["TOKENIZERS_PARALLELISM"] = "false"
-
-    last_screenshots = take_screenshots()
-
-    while True:
-        if not is_user_active():
-            time.sleep(3)
-            continue
-
-        screenshots = take_screenshots()
-
-        for i, screenshot in enumerate(screenshots):
-
-            last_screenshot = last_screenshots[i]
-
-            if not is_similar(screenshot, last_screenshot):
-                last_screenshots[i] = screenshot
-                image = Image.fromarray(screenshot)
-                timestamp = int(time.time())
-                image.save(
-                    os.path.join(screenshots_path, f"{timestamp}.webp"),
-                    format="webp",
-                    lossless=True,
-                )
-                text: str = extract_text_from_image(current_screenshot)
-                # Only proceed if OCR actually extracts text
-                if text.strip():
-                    embedding: np.ndarray = get_embedding(text)
-                    active_app_name: str = get_active_app_name() or "Unknown App"
-                    active_window_title: str = get_active_window_title() or "Unknown Title"
-                    insert_entry(
-                        text, timestamp, embedding, active_app_name, active_window_title, filename # Pass filename
-                    )
-
-        time.sleep(3) # Wait before taking the next screenshot
+        wait_or_sleep(3)  # Wait before taking the next screenshot
