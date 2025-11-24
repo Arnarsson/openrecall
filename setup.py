@@ -23,7 +23,7 @@ install_requires = [
 # Define OS-specific dependencies
 extras_require = {
     "windows": ["pywin32", "psutil"],
-    "macos": ["pyobjc==10.3"],
+    "macos": ["pyobjc==10.3", "rumps>=0.4.0"],
     "linux": [],
     "python-doctr": [
         "python-doctr @ git+https://github.com/koenvaneijk/doctr.git@af711bc04eb8876a7189923fb51ec44481ee18cd"
@@ -49,10 +49,15 @@ install_requires.extend(extras_require.get("python-doctr", []))
 
 setup(
     name="OpenRecall",
-    version="0.8",
+    version="0.9",
     packages=find_packages(),
     install_requires=install_requires,
     long_description=long_description,
     long_description_content_type="text/markdown",
     extras_require=extras_require,
+    entry_points={
+        "console_scripts": [
+            "openrecall=openrecall.cli:main",
+        ],
+    },
 )

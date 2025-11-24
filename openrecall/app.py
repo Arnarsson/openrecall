@@ -181,12 +181,42 @@ def serve_image(filename):
 
 
 if __name__ == "__main__":
-    create_db()
+    import sys
+    import signal
+    import threading
 
-    print(f"Appdata folder: {appdata_folder}")
+    # If CLI arguments are provided, delegate to the CLI module
+    if len(sys.argv) > 1:
+        from openrecall.cli import main
+        main()
+    else:
+        # Legacy mode - run directly without menu bar
+        create_db()
 
-    # Start the thread to record screenshots
-    t = Thread(target=record_screenshots_thread)
-    t.start()
+        print(f"Appdata folder: {appdata_folder}")
+        print("Dashboard: http://localhost:8082")
+        print("Press Ctrl+C to stop.")
+        print("")
+        print("Tip: Run 'openrecall --install' to enable auto-start at login (macOS)")
+        print("")
 
-    app.run(port=8082)
+        # Create stop/pause events for the screenshot thread
+        stop_event = threading.Event()
+        pause_event = threading.Event()
+
+        # Start screenshot recording thread
+        t = Thread(
+            target=record_screenshots_thread,
+            args=(stop_event, pause_event),
+            daemon=True,
+        )
+        t.start()
+
+        # Run Flask on main thread (legacy behavior)
+        try:
+            app.run(port=8082)
+        except KeyboardInterrupt:
+            print("\nShutting down...")
+        finally:
+            stop_event.set()
+            t.join(timeout=5)
