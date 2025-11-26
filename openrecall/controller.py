@@ -12,14 +12,18 @@ class OpenRecallController:
     - Flask web server thread
     - Pause/resume functionality
     - Graceful shutdown
+    - Optional Universal Memory sync
     """
 
-    def __init__(self, port: int = 8082):
+    def __init__(self, port: int = 8082, sync_memories: bool = False, mcp_url: str = "http://localhost:3000"):
         self.port = port
+        self.sync_memories = sync_memories
+        self.mcp_url = mcp_url
         self.stop_event = threading.Event()
         self.pause_event = threading.Event()
         self.screenshot_thread: Optional[threading.Thread] = None
         self.flask_thread: Optional[threading.Thread] = None
+        self.memory_sync = None
         self._started = False
 
     def start(self):
@@ -33,6 +37,16 @@ class OpenRecallController:
         # Initialize database
         create_db()
 
+        # Initialize Universal Memory sync if enabled
+        if self.sync_memories:
+            try:
+                from openrecall.universal_memory import MemorySync
+                self.memory_sync = MemorySync(mcp_url=self.mcp_url)
+                print(f"Universal Memory sync initialized ({self.mcp_url})")
+            except Exception as e:
+                print(f"Warning: Could not initialize Universal Memory sync: {e}")
+                self.memory_sync = None
+
         # Clear any previous stop signals
         self.stop_event.clear()
         self.pause_event.clear()
@@ -40,7 +54,7 @@ class OpenRecallController:
         # Start screenshot recording thread
         self.screenshot_thread = threading.Thread(
             target=record_screenshots_thread,
-            args=(self.stop_event, self.pause_event),
+            args=(self.stop_event, self.pause_event, self.memory_sync),
             daemon=True,
             name="ScreenshotRecorder",
         )

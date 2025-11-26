@@ -80,12 +80,14 @@ class OpenRecallMenuBar(rumps.App):
         rumps.quit_application()
 
 
-def run_menubar(port: int = 8082):
+def run_menubar(port: int = 8082, sync_memories: bool = False, mcp_url: str = "http://localhost:3000"):
     """
     Entry point for the menu bar application.
 
     Args:
         port: Port number for the web dashboard.
+        sync_memories: Enable real-time sync to Universal Memory.
+        mcp_url: Universal Memory MCP server URL.
     """
     if not RUMPS_AVAILABLE:
         raise ImportError(
@@ -95,10 +97,12 @@ def run_menubar(port: int = 8082):
     print(f"OpenRecall starting...")
     print(f"Data folder: {appdata_folder}")
     print(f"Dashboard: http://localhost:{port}")
+    if sync_memories:
+        print(f"Universal Memory sync: ENABLED ({mcp_url})")
     print("")
 
     # Create and start controller
-    controller = OpenRecallController(port=port)
+    controller = OpenRecallController(port=port, sync_memories=sync_memories, mcp_url=mcp_url)
     controller.start()
 
     # Create and run menu bar app
