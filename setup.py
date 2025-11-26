@@ -28,6 +28,7 @@ extras_require = {
     "python-doctr": [
         "python-doctr @ git+https://github.com/koenvaneijk/doctr.git@af711bc04eb8876a7189923fb51ec44481ee18cd"
     ],
+    "universal-memory": ["requests>=2.28.0"],
 }
 
 # Determine the current OS

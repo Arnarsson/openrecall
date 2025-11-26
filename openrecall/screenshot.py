@@ -104,7 +104,7 @@ def take_screenshots() -> List[np.ndarray]:
     return screenshots
 
 
-def record_screenshots_thread(stop_event=None, pause_event=None) -> None:
+def record_screenshots_thread(stop_event=None, pause_event=None, memory_sync=None) -> None:
     """
     Continuously records screenshots, processes them, and stores relevant data.
 
@@ -115,6 +115,7 @@ def record_screenshots_thread(stop_event=None, pause_event=None) -> None:
     Args:
         stop_event: threading.Event to signal the thread to stop. If None, runs indefinitely.
         pause_event: threading.Event to pause recording. If set, recording is paused.
+        memory_sync: Optional MemorySync instance for real-time Universal Memory sync.
     """
     # HACK: Prevents a warning/error from the huggingface/tokenizers library
     # when used in environments where multiprocessing fork safety is a concern.
@@ -181,5 +182,22 @@ def record_screenshots_thread(stop_event=None, pause_event=None) -> None:
                     insert_entry(
                         text, timestamp, embedding, active_app_name, active_window_title, filename
                     )
+
+                    # Sync to Universal Memory if enabled
+                    if memory_sync is not None:
+                        try:
+                            from openrecall.database import Entry
+                            entry = Entry(
+                                id=None,
+                                app=active_app_name,
+                                title=active_window_title,
+                                text=text,
+                                timestamp=timestamp,
+                                embedding=embedding,
+                            )
+                            memory_sync.export_entry(entry)
+                        except Exception as e:
+                            # Don't let sync failures stop recording
+                            pass
 
         wait_or_sleep(3)  # Wait before taking the next screenshot

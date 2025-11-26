@@ -51,6 +51,25 @@ def create_parser():
         help="Port for web dashboard (default: 8082)",
     )
 
+    # Universal Memory integration
+    parser.add_argument(
+        "--export-memories",
+        action="store_true",
+        help="Export all captures to Universal Memory MCP",
+    )
+
+    parser.add_argument(
+        "--sync-memories",
+        action="store_true",
+        help="Enable real-time sync to Universal Memory MCP",
+    )
+
+    parser.add_argument(
+        "--mcp-url",
+        default="http://localhost:3000",
+        help="Universal Memory MCP server URL (default: http://localhost:3000)",
+    )
+
     return parser
 
 
