@@ -117,7 +117,6 @@ def record_screenshots_thread(stop_event=None, pause_event=None) -> None:
         pause_event: threading.Event to pause recording. If set, recording is paused.
     """
     # HACK: Prevents a warning/error from the huggingface/tokenizers library
-    # when used in environments where multiprocessing fork safety is a concern.
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
     last_screenshots: List[np.ndarray] = take_screenshots()
@@ -142,15 +141,13 @@ def record_screenshots_thread(stop_event=None, pause_event=None) -> None:
             continue
 
         if not is_user_active():
-            wait_or_sleep(3)  # Wait longer if user is inactive
+            wait_or_sleep(3)
             continue
 
         current_screenshots: List[np.ndarray] = take_screenshots()
 
-        # Ensure we have a last_screenshot for each current_screenshot
-        # This handles cases where monitor setup might change (though unlikely mid-run)
+        # Handle monitor count changes
         if len(last_screenshots) != len(current_screenshots):
-            # If monitor count changes, reset last_screenshots and continue
             last_screenshots = current_screenshots
             wait_or_sleep(3)
             continue
@@ -162,10 +159,10 @@ def record_screenshots_thread(stop_event=None, pause_event=None) -> None:
             last_screenshot = last_screenshots[i]
 
             if not is_similar(current_screenshot, last_screenshot):
-                last_screenshots[i] = current_screenshot  # Update the last screenshot for this monitor
+                last_screenshots[i] = current_screenshot
                 image = Image.fromarray(current_screenshot)
                 timestamp = int(time.time())
-                filename = f"{timestamp}_{i}.webp"  # Add monitor index to filename for uniqueness
+                filename = f"{timestamp}.webp"
                 filepath = os.path.join(screenshots_path, filename)
                 image.save(
                     filepath,
@@ -179,7 +176,7 @@ def record_screenshots_thread(stop_event=None, pause_event=None) -> None:
                     active_app_name: str = get_active_app_name() or "Unknown App"
                     active_window_title: str = get_active_window_title() or "Unknown Title"
                     insert_entry(
-                        text, timestamp, embedding, active_app_name, active_window_title, filename
+                        text, timestamp, embedding, active_app_name, active_window_title
                     )
 
-        wait_or_sleep(3)  # Wait before taking the next screenshot
+        wait_or_sleep(3)
