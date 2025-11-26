@@ -1,5 +1,5 @@
 """
-macOS menu bar application for OpenRecall using rumps.
+macOS menu bar application for TotalRecall using rumps.
 
 This module provides a native macOS menu bar icon with controls for:
 - Opening the web dashboard
@@ -23,9 +23,9 @@ from openrecall.controller import OpenRecallController
 from openrecall.config import appdata_folder
 
 
-class OpenRecallMenuBar(rumps.App):
+class TotalRecallMenuBar(rumps.App):
     """
-    macOS menu bar application for OpenRecall.
+    macOS menu bar application for TotalRecall.
 
     Provides a status bar icon with menu items to control the application.
     """
@@ -33,8 +33,8 @@ class OpenRecallMenuBar(rumps.App):
     def __init__(self, controller: OpenRecallController, port: int = 8082):
         # Use a simple text indicator (emoji works well in menu bar)
         super().__init__(
-            name="OpenRecall",
-            title="OR",  # Text shown in menu bar
+            name="TotalRecall",
+            title="TR",  # Text shown in menu bar
             quit_button=None,  # We'll handle quit ourselves
         )
         self.controller = controller
@@ -46,7 +46,7 @@ class OpenRecallMenuBar(rumps.App):
             None,  # Separator
             rumps.MenuItem("Pause Recording", callback=self.toggle_recording),
             None,  # Separator
-            rumps.MenuItem("Quit OpenRecall", callback=self.quit_app),
+            rumps.MenuItem("Quit TotalRecall", callback=self.quit_app),
         ]
 
         # Update initial status
@@ -55,15 +55,15 @@ class OpenRecallMenuBar(rumps.App):
     def _update_status(self):
         """Update menu bar title and menu items to reflect current state."""
         if self.controller.is_recording:
-            self.title = "OR"  # Normal state
+            self.title = "TR"  # Normal state
             self.menu["Pause Recording"].title = "Pause Recording"
         else:
-            self.title = "OR (Paused)"  # Paused indicator
+            self.title = "TR (Paused)"  # Paused indicator
             self.menu["Pause Recording"].title = "Resume Recording"
 
     def open_dashboard(self, _):
         """Open the web dashboard in the default browser."""
-        url = f"http://localhost:{self.port}"
+        url = f"http://localhost:{self.port}/app"
         webbrowser.open(url)
 
     def toggle_recording(self, sender):
@@ -94,9 +94,9 @@ def run_menubar(port: int = 8082, sync_memories: bool = False, mcp_url: str = "h
             "rumps is not available. Install it with: pip install rumps"
         )
 
-    print(f"OpenRecall starting...")
+    print(f"TotalRecall starting...")
     print(f"Data folder: {appdata_folder}")
-    print(f"Dashboard: http://localhost:{port}")
+    print(f"Dashboard: http://localhost:{port}/app")
     if sync_memories:
         print(f"Universal Memory sync: ENABLED ({mcp_url})")
     print("")
@@ -106,7 +106,7 @@ def run_menubar(port: int = 8082, sync_memories: bool = False, mcp_url: str = "h
     controller.start()
 
     # Create and run menu bar app
-    app = OpenRecallMenuBar(controller, port=port)
+    app = TotalRecallMenuBar(controller, port=port)
 
     try:
         app.run()

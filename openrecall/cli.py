@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-CLI entry point for OpenRecall with platform-aware execution.
+CLI entry point for TotalRecall with platform-aware execution.
 
 Usage:
-    openrecall              # Run with menu bar (macOS) or CLI mode (other platforms)
-    openrecall --install    # Install auto-start at login (macOS only)
-    openrecall --uninstall  # Remove auto-start
-    openrecall --no-gui     # Run in CLI mode without menu bar
-    openrecall --export-memories  # Export to Universal Memory MCP
-    openrecall --sync-memories    # Run with real-time Universal Memory sync
+    totalrecall              # Run with menu bar (macOS) or CLI mode (other platforms)
+    totalrecall --install    # Install auto-start at login (macOS only)
+    totalrecall --uninstall  # Remove auto-start
+    totalrecall --no-gui     # Run in CLI mode without menu bar
+    totalrecall --export-memories  # Export to Universal Memory MCP
+    totalrecall --sync-memories    # Run with real-time Universal Memory sync
 """
 import sys
 import signal
@@ -17,7 +17,7 @@ from openrecall.config import get_args, appdata_folder
 
 
 def main():
-    """Main entry point for OpenRecall."""
+    """Main entry point for TotalRecall."""
     args = get_args()
 
     # Handle install/uninstall commands first
@@ -62,8 +62,8 @@ def main():
 
 
 def export_to_universal_memory(mcp_url: str):
-    """Export all OpenRecall data to Universal Memory."""
-    print("Exporting OpenRecall data to Universal Memory...")
+    """Export all TotalRecall data to Universal Memory."""
+    print("Exporting TotalRecall data to Universal Memory...")
     print(f"MCP URL: {mcp_url}")
     print("")
 
@@ -85,12 +85,12 @@ def export_to_universal_memory(mcp_url: str):
 
 
 def run_cli_mode(port: int = 8082, sync_memories: bool = False, mcp_url: str = "http://localhost:3000"):
-    """Run OpenRecall in traditional CLI mode (non-GUI)."""
+    """Run TotalRecall in traditional CLI mode (non-GUI)."""
     from openrecall.controller import OpenRecallController
 
-    print("OpenRecall starting in CLI mode...")
+    print("TotalRecall starting in CLI mode...")
     print(f"Data folder: {appdata_folder}")
-    print(f"Dashboard: http://localhost:{port}")
+    print(f"Dashboard: http://localhost:{port}/app")
     if sync_memories:
         print(f"Universal Memory sync: ENABLED ({mcp_url})")
     print("Press Ctrl+C to stop.")

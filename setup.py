@@ -9,6 +9,7 @@ with io.open("README.md", "r", encoding="utf-8") as f:
 
 install_requires = [
     "Flask==3.0.3",
+    "flask-cors>=4.0.0",
     "numpy==1.26.4",
     "mss==9.0.1",
     "sentence-transformers==3.0.0",
@@ -49,8 +50,8 @@ if current_os and current_os in extras_require:
 install_requires.extend(extras_require.get("python-doctr", []))
 
 setup(
-    name="OpenRecall",
-    version="0.9",
+    name="TotalRecall",
+    version="1.0.0",
     packages=find_packages(),
     install_requires=install_requires,
     long_description=long_description,
@@ -58,7 +59,8 @@ setup(
     extras_require=extras_require,
     entry_points={
         "console_scripts": [
-            "openrecall=openrecall.cli:main",
+            "totalrecall=openrecall.cli:main",
+            "openrecall=openrecall.cli:main",  # Legacy alias
         ],
     },
 )
