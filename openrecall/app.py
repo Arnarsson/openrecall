@@ -16,7 +16,7 @@ from openrecall.nlp import cosine_similarity, get_embedding
 from openrecall.screenshot import record_screenshots_thread
 from openrecall.utils import human_readable_time, timestamp_to_human_readable
 
-app = Flask(__name__, static_folder='static/dist', static_url_path='/assets')
+app = Flask(__name__, static_folder='static/dist', static_url_path='/app')
 CORS(app)  # Enable CORS for React development
 
 # App version
